@@ -1,0 +1,43 @@
+{
+  "selected_preset": "swift-standard",
+  "engine_path": "D:\\Ninfer\\infer-engine-sm89-20261002\\engine\\ninfer-serve-89.exe",
+  "model_path": "D:\\Ninfer\\infer-engine-sm89-20261002\\models\\swift-qwen38-rco-iq3s.ninfer",
+  "host": "127.0.0.1",
+  "port": 8094,
+  "model_id": "qwen3.8-27b",
+  "max_concurrency": 1,
+  "max_context": 1048576,
+  "default_max_tokens": 262144,
+  "kv_capacity": 49152,
+  "kv_dtype": "k8v4",
+  "host_kv_mib": 26000,
+  "prefill_chunk": 512,
+  "max_shared_prefixes": 0,
+  "gdn_state_fp16": true,
+  "rope_yarn": true,
+  "no_cuda_graph": true,
+  "release_diverged_checkpoints": true,
+  "recover_invariant_failures": true,
+  "auto_restart": false,
+  "spec": "mtp",
+  "draft_tokens": 4,
+  "lm_head_draft": false,
+  "vision": false,
+  "default_reasoning_effort": "xhigh",
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": 20,
+  "presence_penalty": 0,
+  "env_vars": {
+    "NINFER_KV_WINDOW": "16384",
+    "NINFER_KV_RETRIEVE": "8192",
+    "NINFER_KV_RING": "1",
+    "NINFER_HOST_PAGEABLE": "1",
+    "NINFER_KV_REUSE_HOSTBACKED": "1"
+  },
+  "log_filters": [
+    "mask hidden",
+    "demote-other"
+  ],
+  "extra_args": ""
+}

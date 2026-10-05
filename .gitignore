@@ -1,0 +1,89 @@
+# ============================================================
+# Ninfer Manager - .gitignore
+# ============================================================
+
+# Python byte-compiled / optimized / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs and Runtime outputs
+*.log
+ninfer_engine.log
+logs/
+out.log
+err.log
+
+# Large Model weights (prevent committing GBs of weights)
+*.ninfer
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+/models/
+
+# Windows specific
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.acl-recovery/
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE and Editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# User generated custom scripts
+start-custom.bat
+temp/
+tmp/
+
+# Harness & AI assistant scaffolding
+.agents/
+.dsh/
+.trellis/
+AGENTS.md

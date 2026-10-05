@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ninfer 模型启动器 & 控制台</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body class="dark-theme">
+  <div id="app">
+    <!-- Top Global Header -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <span class="logo-title">Ninfer Manager</span>
+          <span class="badge badge-accent">sm_89</span>
+        </div>
+        <div class="engine-status-pill" id="engineStatusPill">
+          <span class="status-dot dot-stopped" id="statusDot"></span>
+          <span class="status-label" id="statusLabel">未运行</span>
+          <span class="status-meta" id="statusMeta"></span>
+        </div>
+        <div class="speed-status-pill" id="navSpeedPill" style="display: none;">
+          <span class="speed-pulse-icon">⚡</span>
+          <span id="navSpeedText">0.0 tok/s</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button id="btnStart" class="btn btn-success" title="启动当前配置的推理引擎">
+          <span class="btn-icon">▶</span> 启动引擎
+        </button>
+        <button id="btnStop" class="btn btn-danger" disabled title="停止正在运行的引擎">
+          <span class="btn-icon">■</span> 停止引擎
+        </button>
+        <button id="btnRestart" class="btn btn-warning" disabled title="重新启动引擎">
+          <span class="btn-icon">↻</span> 重启
+        </button>
+        <button id="btnExportTop" class="btn btn-secondary" title="生成并导出 BAT 脚本">
+          <span class="btn-icon">📋</span> 导出 BAT
+        </button>
+        <a id="btnApiLink" href="#" target="_blank" class="btn btn-ghost" style="display:none;" title="在新标签页测试 API">
+          <span class="btn-icon">🔗</span> API 接口
+        </a>
+      </div>
+    </header>
+
+    <!-- Real-time Hardware Metrics Row -->
+    <section class="metrics-bar">
+      <!-- CPU Metric -->
+      <div class="metric-card" id="cardCpu">
+        <div class="metric-header">
+          <span class="metric-name">CPU 使用率</span>
+          <span class="metric-badge" id="cpuBadge">0%</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-main-value" id="cpuVal">0.0</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar bar-cyan" id="cpuBar" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub">系统处理器负载</div>
+      </div>
+
+      <!-- RAM Metric -->
+      <div class="metric-card" id="cardRam">
+        <div class="metric-header">
+          <span class="metric-name">系统物理内存 (RAM)</span>
+          <span class="metric-badge" id="ramBadge">0%</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-main-value" id="ramUsedVal">0.0</span>
+          <span class="metric-slash">/</span>
+          <span class="metric-total-value" id="ramTotalVal">0.0</span>
+          <span class="metric-unit">GB</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar bar-blue" id="ramBar" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub">可用: <span id="ramFreeVal">0.0</span> GB</div>
+      </div>
+
+      <!-- GPU Utilization -->
+      <div class="metric-card" id="cardGpu">
+        <div class="metric-header">
+          <span class="metric-name" id="gpuName">GPU 核心利用率</span>
+          <span class="metric-badge" id="gpuBadge">0%</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-main-value" id="gpuUtilVal">0.0</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar bar-emerald" id="gpuBar" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub">
+          温度: <span id="gpuTempVal">0</span>°C &nbsp;|&nbsp; 功耗: <span id="gpuPowerVal">0.0</span>W
+        </div>
+      </div>
+
+      <!-- VRAM Metric -->
+      <div class="metric-card" id="cardVram">
+        <div class="metric-header">
+          <span class="metric-name">显存使用 (VRAM)</span>
+          <span class="metric-badge" id="vramBadge">0%</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-main-value" id="vramUsedVal">0.0</span>
+          <span class="metric-slash">/</span>
+          <span class="metric-total-value" id="vramTotalVal">0.0</span>
+          <span class="metric-unit">GB</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar bar-purple" id="vramBar" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub">可用显存: <span id="vramFreeVal">0.0</span> GB</div>
+      </div>
+
+      <!-- Real-time Token Speed Metric -->
+      <div class="metric-card metric-card-speed" id="cardSpeed">
+        <div class="metric-header">
+          <span class="metric-name">实时 Token 输出速度</span>
+          <span class="metric-badge" id="speedBadge">空闲 0.0</span>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-main-value" id="speedMainVal">0.0</span>
+          <span class="metric-unit">tok/s</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar bar-speed" id="speedBarTrack" style="width: 0%;"></div>
+        </div>
+        <div class="metric-sub" id="speedSubInfo">
+          Prefill: <span id="speedPrefillVal">0.0</span> tok/s &nbsp;|&nbsp; TTFT: <span id="speedTtftVal">0</span>ms
+        </div>
+      </div>
+
+      <!-- Service Health Probe -->
+      <div class="metric-card metric-card-health" id="cardHealth">
+        <div class="metric-header">
+          <span class="metric-name">推理服务状态</span>
+          <span class="metric-badge" id="probeBadge">OFFLINE</span>
+        </div>
+        <div class="health-indicator">
+          <div class="health-pulse" id="healthPulse"></div>
+          <div class="health-info">
+            <div class="health-host" id="probeHost">127.0.0.1:8094</div>
+            <div class="health-status" id="probeStatusText">等待启动...</div>
+          </div>
+        </div>
+        <div class="metric-sub" id="enginePidText">PID: -</div>
+      </div>
+    </section>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="main-tabs">
+      <button class="tab-btn active" data-tab="tab-config">
+        <span class="tab-icon">⚙️</span> 参数配置
+      </button>
+      <button class="tab-btn" data-tab="tab-logs">
+        <span class="tab-icon">📜</span> 运行日志
+        <span class="tab-counter" id="logCounterBadge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-chat">
+        <span class="tab-icon">💬</span> 对话测试
+      </button>
+      <button class="tab-btn" data-tab="tab-hardware">
+        <span class="tab-icon">💻</span> 硬件详情
+      </button>
+      <button class="tab-btn" data-tab="tab-export">
+        <span class="tab-icon">📋</span> 脚本与命令导出
+      </button>
+    </nav>
+
+    <!-- Tab Contents Container -->
+    <main class="content-wrapper">
+      
+      <!-- ================= TAB 1: CONFIGURATION ================= -->
+      <section id="tab-config" class="tab-panel active">
+        <!-- Preset Management Bar -->
+        <div class="preset-banner">
+          <div class="preset-select-group">
+            <label for="presetSelect"><strong>预设方案 (Preset)：</strong></label>
+            <select id="presetSelect" class="form-select"></select>
+            <button id="btnSaveNewPreset" class="btn btn-sm btn-outline">另存为新预设</button>
+            <button id="btnOverwritePreset" class="btn btn-sm btn-outline">更新当前预设</button>
+            <button id="btnDeletePreset" class="btn btn-sm btn-danger-outline">删除</button>
+          </div>
+          <div class="preset-desc-box" id="presetDesc">预设说明载入中...</div>
+        </div>
+
+        <form id="configForm" onsubmit="return false;">
+          <div class="config-grid">
+
+            <!-- Card: Path & Engine -->
+            <div class="card config-card">
+              <div class="card-title">
+                <span class="card-title-icon">📁</span>
+                <span>核心路径设置</span>
+              </div>
+              <div class="form-group">
+                <label for="engine_path">
+                  引擎可执行文件路径 (ninfer-serve-89.exe)
+                  <span class="label-tip">必须为 sm_89 对应编译版本</span>
+                </label>
+                <div class="input-with-button">
+                  <input type="text" id="engine_path" class="form-control" placeholder="D:\Ninfer\...\engine\ninfer-serve-89.exe" required>
+                  <button type="button" id="btnCheckEngine" class="btn btn-sm btn-secondary">校验</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="model_select">
+                  快速选择已扫描模型
+                  <span class="label-tip">自动扫描并列出本机已下载的 .ninfer 权重</span>
+                </label>
+                <div class="input-with-button">
+                  <select id="model_select" class="form-select">
+                    <option value="">-- 请选择或在下方手动输入 --</option>
+                  </select>
+                  <button type="button" id="btnRescanModels" class="btn btn-sm btn-secondary">刷新扫描</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="model_path">
+                  模型文件完整路径 (model.ninfer)
+                  <span class="label-tip">支持本地任意目录下的 .ninfer 文件</span>
+                </label>
+                <input type="text" id="model_path" class="form-control" placeholder="D:\Ninfer\...\models\xxx.ninfer" required>
+              </div>
+            </div>
+
+            <!-- Card: Network & Concurrency -->
+            <div class="card config-card">
+              <div class="card-title">
+                <span class="card-title-icon">🌐</span>
+                <span>服务与网络限制</span>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="host">监听地址 (--host)</label>
+                  <input type="text" id="host" class="form-control" value="127.0.0.1">
+                </div>
+                <div class="form-group col-6">
+                  <label for="port">监听端口 (--port)</label>
+                  <input type="number" id="port" class="form-control" value="8094">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="model_id">模型公共名称 (--model-id)</label>
+                  <input type="text" id="model_id" class="form-control" value="qwen3.8-27b">
+                </div>
+                <div class="form-group col-6">
+                  <label for="max_concurrency">最大并发请求数 (--max-concurrency)</label>
+                  <input type="number" id="max_concurrency" class="form-control" value="1" min="1" max="8">
+                </div>
+              </div>
+
+              <div class="form-checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="recover_invariant_failures" checked>
+                  <span>发生内部断言异常时仅失败当前请求，保持服务运行 (--recover-invariant-failures)</span>
+                </label>
+              </div>
+              <div class="form-checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="auto_restart">
+                  <span>守护模式：引擎若意外崩溃自动在 3 秒后尝试重启</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Card: Context & KV Cache -->
+            <div class="card config-card col-span-2">
+              <div class="card-title">
+                <span class="card-title-icon">🧠</span>
+                <span>上下文长度与 KV 缓存机制 (KV Cache & Memory)</span>
+              </div>
+              <div class="form-row form-row-4">
+                <div class="form-group">
+                  <label for="max_context">
+                    最大上下文 Token (--max-context)
+                    <span class="label-tip">如 1048576 (1M), 262144 (256K)</span>
+                  </label>
+                  <input type="number" id="max_context" class="form-control" value="1048576">
+                </div>
+                <div class="form-group">
+                  <label for="default_max_tokens">
+                    单次默认最大生成 Token (--default-max-tokens)
+                    <span class="label-tip">32768</span>
+                  </label>
+                  <input type="number" id="default_max_tokens" class="form-control" value="32768">
+                </div>
+                <div class="form-group">
+                  <label for="kv_capacity">
+                    显存 KV 容量 Token (--kv-capacity)
+                    <span class="label-tip">小卡建议 17920</span>
+                  </label>
+                  <input type="number" id="kv_capacity" class="form-control" value="17920">
+                </div>
+                <div class="form-group">
+                  <label for="kv_dtype">
+                    KV 精度格式 (--kv-dtype)
+                    <span class="label-tip">推荐 k8v4 (节省显存且速度极高)</span>
+                  </label>
+                  <select id="kv_dtype" class="form-select">
+                    <option value="k8v4">k8v4 (推荐，高压缩比极速)</option>
+                    <option value="bf16">bf16 (全精度原生)</option>
+                    <option value="fp8">fp8 (8位浮点)</option>
+                    <option value="int8">int8 (8位整型)</option>
+                    <option value="rk8v4">rk8v4</option>
+                    <option value="rk4v4">rk4v4</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row form-row-3">
+                <div class="form-group">
+                  <label for="host_kv_mib">
+                    Host 内存缓存大小 (--host-kv-mib)
+                    <span class="label-tip">单位 MiB (例如 16384 代表 16GB 内存)</span>
+                  </label>
+                  <input type="number" id="host_kv_mib" class="form-control" value="16384">
+                </div>
+                <div class="form-group">
+                  <label for="prefill_chunk">
+                    Prefill 预填充分块 (--prefill-chunk)
+                    <span class="label-tip">128的倍数，如 512 或 1024</span>
+                  </label>
+                  <input type="number" id="prefill_chunk" class="form-control" value="1024">
+                </div>
+                <div class="form-group">
+                  <label for="max_shared_prefixes">
+                    共享前缀上限 (--max-shared-prefixes)
+                    <span class="label-tip">0 为关闭多请求共享前缀</span>
+                  </label>
+                  <input type="number" id="max_shared_prefixes" class="form-control" value="0">
+                </div>
+              </div>
+
+              <div class="checkbox-grid">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="gdn_state_fp16" checked>
+                  <span>GDN 循环状态存为 FP16 (--gdn-state-fp16)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="rope_yarn" checked>
+                  <span>超长上下文启用 RoPE YaRN 插值 (--rope-yarn)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="no_cuda_graph" checked>
+                  <span>禁用 CUDA Graph 解码 (--no-cuda-graph)</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="release_diverged_checkpoints" checked>
+                  <span>释放分叉会话检查点 (--release-diverged-checkpoints)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Card: Speculative Decoding & Acceleration -->
+            <div class="card config-card">
+              <div class="card-title">
+                <span class="card-title-icon">🚀</span>
+                <span>投机解码与视觉多模态</span>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="spec">投机解码后端 (--spec)</label>
+                  <select id="spec" class="form-select">
+                    <option value="none">关闭投机 (none)</option>
+                    <option value="mtp">MTP (Multi-Token Prediction)</option>
+                    <option value="dflash2">DFlash2 (极速投机，草稿建议12)</option>
+                    <option value="dflash">DFlash (v1 投机)</option>
+                  </select>
+                </div>
+                <div class="form-group col-6">
+                  <label for="draft_tokens">投机草稿步数 (--draft-tokens)</label>
+                  <input type="number" id="draft_tokens" class="form-control" value="4" min="1" max="15">
+                </div>
+              </div>
+
+              <div class="form-checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="lm_head_draft">
+                  <span>启用优化提议头草稿加速 (--lm-head-draft)</span>
+                </label>
+              </div>
+              <div class="form-checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="vision">
+                  <span>启用视觉与图像输入支持 (--vision)</span>
+                </label>
+              </div>
+              <div class="form-checkbox-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="env_ptq1_fast">
+                  <span>启用 PTQ1 极速量化内核 (NINFER_TERNARY_PTQ1_FAST=1)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Card: Sampling & Thinking -->
+            <div class="card config-card">
+              <div class="card-title">
+                <span class="card-title-icon">🎯</span>
+                <span>推理采样与思考模式</span>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="default_reasoning_effort">默认思考深度 (--default-reasoning-effort)</label>
+                  <select id="default_reasoning_effort" class="form-select">
+                    <option value="xhigh">xhigh (极高深度，适合严谨推理)</option>
+                    <option value="high">high (高深度)</option>
+                    <option value="medium">medium (中等)</option>
+                    <option value="low">low (低深度)</option>
+                    <option value="minimal">minimal (最小思考)</option>
+                    <option value="none">none (关闭思考，普通生成)</option>
+                  </select>
+                </div>
+                <div class="form-group col-6">
+                  <label for="temperature">采样温度 (--temperature)</label>
+                  <input type="number" id="temperature" class="form-control" value="0.7" step="0.05" min="0" max="2">
+                </div>
+              </div>
+
+              <div class="form-row form-row-3">
+                <div class="form-group">
+                  <label for="top_p">Top-P</label>
+                  <input type="number" id="top_p" class="form-control" value="0.9" step="0.05" min="0" max="1">
+                </div>
+                <div class="form-group">
+                  <label for="top_k">Top-K</label>
+                  <input type="number" id="top_k" class="form-control" value="20" min="0" max="100">
+                </div>
+                <div class="form-group">
+                  <label for="presence_penalty">存在惩罚</label>
+                  <input type="number" id="presence_penalty" class="form-control" value="0.0" step="0.1" min="-2" max="2">
+                </div>
+              </div>
+            </div>
+
+            <!-- Card: Environment Variables & Noise Filters -->
+            <div class="card config-card col-span-2">
+              <div class="card-title">
+                <span class="card-title-icon">🔧</span>
+                <span>环境变量与高级参数</span>
+              </div>
+              <div class="form-row form-row-4">
+                <div class="form-group">
+                  <label for="env_kv_window">NINFER_KV_WINDOW</label>
+                  <input type="text" id="env_kv_window" class="form-control" value="16384">
+                </div>
+                <div class="form-group">
+                  <label for="env_kv_retrieve">NINFER_KV_RETRIEVE</label>
+                  <input type="text" id="env_kv_retrieve" class="form-control" value="8192">
+                </div>
+                <div class="form-group">
+                  <label for="env_kv_ring">NINFER_KV_RING</label>
+                  <input type="text" id="env_kv_ring" class="form-control" value="1">
+                </div>
+                <div class="form-group">
+                  <label for="env_host_pageable">NINFER_HOST_PAGEABLE</label>
+                  <input type="text" id="env_host_pageable" class="form-control" value="1">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="log_filters">
+                    控制台过滤关键字 (忽略杂音日志，以逗号分隔)
+                    <span class="label-tip">例如: mask hidden, demote-other</span>
+                  </label>
+                  <input type="text" id="log_filters" class="form-control" value="mask hidden, demote-other">
+                </div>
+                <div class="form-group col-6">
+                  <label for="extra_args">
+                    额外追加命令行参数 (Raw Extra Flags)
+                    <span class="label-tip">直接追加到末尾的参数，如 --log-level debug</span>
+                  </label>
+                  <input type="text" id="extra_args" class="form-control" placeholder="例如: --structured-output">
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </section>
+
+      <!-- ================= TAB 2: LIVE LOGS ================= -->
+      <section id="tab-logs" class="tab-panel">
+        <div class="terminal-container">
+          <div class="terminal-toolbar">
+            <div class="terminal-toolbar-left">
+              <span class="terminal-dot term-red"></span>
+              <span class="terminal-dot term-yellow"></span>
+              <span class="terminal-dot term-green"></span>
+              <span class="terminal-title">Ninfer Console Output (STDOUT/STDERR)</span>
+              <span class="sse-badge" id="sseBadge">● 实时监听中</span>
+            </div>
+            <div class="terminal-toolbar-right">
+              <input type="text" id="logSearchInput" class="term-search-input" placeholder="🔍 快速过滤日志 (如 kvmem_score)...">
+              <label class="term-checkbox-label">
+                <input type="checkbox" id="chkAutoScroll" checked> 自动滚屏
+              </label>
+              <button id="btnClearLogs" class="btn btn-xs btn-outline">清空日志</button>
+              <button id="btnCopyLogs" class="btn btn-xs btn-outline">复制全部</button>
+            </div>
+          </div>
+          <div class="terminal-body" id="terminalBody">
+            <div class="term-line term-info">[系统] 等待启动推理引擎... 点击上方「启动引擎」开始运行</div>
+          </div>
+          <div class="terminal-footer">
+            <div class="footer-stat">已捕获: <span id="logTotalLines">0</span> 行</div>
+            <div class="footer-cmd" id="terminalCmdline">命令行: (未运行)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: CHAT PLAYGROUND ================= -->
+      <section id="tab-chat" class="tab-panel">
+        <div class="chat-layout">
+          <!-- Chat Messages Area -->
+          <div class="chat-container">
+            <div class="chat-history" id="chatHistory">
+              <div class="chat-msg msg-assistant">
+                <div class="msg-avatar">⚡</div>
+                <div class="msg-bubble">
+                  你好！我是 Ninfer 推理引擎模型。引擎启动后，你可以直接在这里发送 Prompt 进行实时对话和速度测试。
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Speed Indicator -->
+            <div class="speed-bar" id="speedBar" style="display: none;">
+              <div class="speed-item">
+                <span class="speed-label">生成速度:</span>
+                <span class="speed-val" id="statSpeed">0.0</span> tok/s
+              </div>
+              <div class="speed-item">
+                <span class="speed-label">首字延迟 (TTFT):</span>
+                <span class="speed-val" id="statTtft">0</span> ms
+              </div>
+              <div class="speed-item">
+                <span class="speed-label">输出 Tokens:</span>
+                <span class="speed-val" id="statTokens">0</span>
+              </div>
+              <div class="speed-item">
+                <span class="speed-label">耗时:</span>
+                <span class="speed-val" id="statElapsed">0.0</span> s
+              </div>
+            </div>
+
+            <!-- Quick Prompt Suggestions -->
+            <div class="quick-prompts">
+              <span class="quick-title">快捷测试：</span>
+              <button class="quick-btn" data-prompt="数数测试：请从 1 数到 30，每行一个数字。">从1数到30 (测速)</button>
+              <button class="quick-btn" data-prompt="请简明扼要地介绍一下你自己，以及你的架构特点。">自我介绍</button>
+              <button class="quick-btn" data-prompt="用 Python 实现一个快速排序算法，并附带详细中文注释和示例测试用例。">快速排序算法</button>
+              <button class="quick-btn" data-prompt="写一首赞美计算与智能的现代诗歌，四小节。">写一首小诗</button>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="chat-input-bar">
+              <textarea id="chatInput" class="chat-textarea" placeholder="输入测试问题或指令... (按 Ctrl+Enter 发送)" rows="2"></textarea>
+              <div class="chat-btn-group">
+                <button id="btnSendChat" class="btn btn-success">发送</button>
+                <button id="btnClearChat" class="btn btn-secondary">清空对话</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: HARDWARE DETAILS ================= -->
+      <section id="tab-hardware" class="tab-panel">
+        <div class="hardware-grid">
+          <div class="card">
+            <div class="card-title">
+              <span class="card-title-icon">🎮</span>
+              <span>GPU 显卡与驱动详细参数</span>
+            </div>
+            <table class="data-table">
+              <tbody>
+                <tr><td>显卡型号</td><td id="dtGpuName">检测中...</td></tr>
+                <tr><td>GPU 核心负载</td><td id="dtGpuUtil">0%</td></tr>
+                <tr><td>显存总量</td><td id="dtVramTotal">0 MB</td></tr>
+                <tr><td>已用显存</td><td id="dtVramUsed">0 MB</td></tr>
+                <tr><td>剩余可用显存</td><td id="dtVramFree">0 MB</td></tr>
+                <tr><td>核心温度</td><td id="dtGpuTemp">0°C</td></tr>
+                <tr><td>当前实时功耗</td><td id="dtGpuPower">0.0 W</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span class="card-title-icon">🖥️</span>
+              <span>系统 CPU 与物理内存详情</span>
+            </div>
+            <table class="data-table">
+              <tbody>
+                <tr><td>CPU 总利用率</td><td id="dtCpuUtil">0%</td></tr>
+                <tr><td>物理内存总量</td><td id="dtRamTotal">0 GB</td></tr>
+                <tr><td>物理内存已用</td><td id="dtRamUsed">0 GB</td></tr>
+                <tr><td>物理内存可用</td><td id="dtRamFree">0 GB</td></tr>
+                <tr><td>内存占用率</td><td id="dtRamLoad">0%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card col-span-2">
+            <div class="card-title">
+              <span class="card-title-icon">📊</span>
+              <span>当前正在占用 GPU 显存的进程 (NVIDIA SMI Compute Apps)</span>
+            </div>
+            <table class="data-table" id="tableGpuProcs">
+              <thead>
+                <tr>
+                  <th>进程 PID</th>
+                  <th>程序名称</th>
+                  <th>显存占用 (MiB)</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyGpuProcs">
+                <tr><td colspan="3" style="text-align: center; color: #888;">暂无或正在检测中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: SCRIPT & BAT EXPORT ================= -->
+      <section id="tab-export" class="tab-panel">
+        <div class="card">
+          <div class="card-title">
+            <span class="card-title-icon">📄</span>
+            <span>生成 Windows 批处理启动脚本 (.bat)</span>
+            <div class="card-actions">
+              <button id="btnCopyBat" class="btn btn-sm btn-outline">复制批处理脚本</button>
+              <button id="btnDownloadBat" class="btn btn-sm btn-success">下载为 start-custom.bat</button>
+            </div>
+          </div>
+          <p class="text-muted">
+            下方为根据你当前界面上修改的所有参数、环境变量、路径自动生成的标准 Windows 批处理脚本，格式与 <code>start-swift.bat</code>、<code>start-pq2.bat</code> 完全兼容：
+          </p>
+          <pre class="code-preview" id="batCodePreview">正在生成脚本预览...</pre>
+
+          <div class="card-title" style="margin-top: 25px;">
+            <span class="card-title-icon">⌨️</span>
+            <span>单行完整执行命令行</span>
+            <div class="card-actions">
+              <button id="btnCopyCmd" class="btn btn-sm btn-outline">复制单行命令</button>
+            </div>
+          </div>
+          <pre class="code-preview" id="cmdCodePreview">正在生成单行命令...</pre>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Global Floating Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
